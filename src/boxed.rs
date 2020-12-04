@@ -1,10 +1,10 @@
 //! Aliasable [`Box`].
 
-use core::{fmt, mem};
 use core::pin::Pin;
+use core::{fmt, mem};
 use core::{ops::Deref, ptr::NonNull};
 
-use alloc::boxed::Box as UniqueBox;
+pub use alloc::boxed::Box as UniqueBox;
 
 pub struct Box<T: ?Sized>(NonNull<T>);
 

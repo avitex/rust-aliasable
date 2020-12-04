@@ -5,7 +5,7 @@
 
 # rust-aliasable
 
-**Rust library with basic aliasable Vec and Box implementations**  
+**Rust library for basic aliasable/non-unique-ptr alloc types**  
 Documentation hosted on [docs.rs](https://docs.rs/aliasable).
 
 ```toml

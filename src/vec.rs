@@ -1,10 +1,10 @@
 //! Aliasable [`Vec`].
 
-use core::{fmt, mem, slice};
 use core::pin::Pin;
+use core::{fmt, mem, slice};
 use core::{ops::Deref, ptr::NonNull};
 
-use alloc::vec::Vec as UniqueVec;
+pub use alloc::vec::Vec as UniqueVec;
 
 pub struct Vec<T> {
     ptr: NonNull<T>,

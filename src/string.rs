@@ -1,11 +1,12 @@
 //! Aliasable [`String`].
 
-use alloc::string::String as UniqueString;
 use core::ops::Deref;
-use core::str;
 use core::pin::Pin;
+use core::str;
 
 use crate::vec::Vec;
+
+pub use alloc::string::String as UniqueString;
 
 pub struct String(Vec<u8>);
 
