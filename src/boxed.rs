@@ -1,6 +1,7 @@
 //! Aliasable [`Box`].
 
 use core::{fmt, mem};
+use core::pin::Pin;
 use core::{ops::Deref, ptr::NonNull};
 
 use alloc::boxed::Box as UniqueBox;
@@ -11,7 +12,7 @@ impl<T: ?Sized> Box<T> {
     /// Consumes the aliasable box and converts it back into a
     /// non-aliasable `Box`.
     #[inline]
-    pub fn into_unique_box(mut ptr: Box<T>) -> UniqueBox<T> {
+    pub fn into_unique(mut ptr: Box<T>) -> UniqueBox<T> {
         // As we are consuming the `Box` structure we can safely assume any
         // aliasing has ended and convert the aliasable `Box` back to into an
         // unaliasable `UniqueBox`.
@@ -21,6 +22,20 @@ impl<T: ?Sized> Box<T> {
         mem::forget(ptr);
         // Return the `UniqueBox`.
         unique
+    }
+
+    pub fn into_unique_pinned(pin: Pin<Box<T>>) -> Pin<UniqueBox<T>> {
+        unsafe {
+            let aliasable = Pin::into_inner_unchecked(pin);
+            Pin::new_unchecked(Box::into_unique(aliasable))
+        }
+    }
+
+    pub fn from_unique_pinned(pin: Pin<UniqueBox<T>>) -> Pin<Box<T>> {
+        unsafe {
+            let unique = Pin::into_inner_unchecked(pin);
+            Pin::new_unchecked(Box::from(unique))
+        }
     }
 
     #[inline]

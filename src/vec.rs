@@ -1,6 +1,7 @@
 //! Aliasable [`Vec`].
 
 use core::{fmt, mem, slice};
+use core::pin::Pin;
 use core::{ops::Deref, ptr::NonNull};
 
 use alloc::vec::Vec as UniqueVec;
@@ -15,7 +16,7 @@ impl<T> Vec<T> {
     /// Consumes the aliasable [`Vec`] and converts it back into a
     /// non-aliasable [`UniqueVec`].
     #[inline]
-    pub fn into_unique_vec(mut vec: Vec<T>) -> UniqueVec<T> {
+    pub fn into_unique(mut vec: Vec<T>) -> UniqueVec<T> {
         // As we are consuming the `Vec` structure we can safely assume any
         // aliasing has ended and convert the aliasable `Vec` back to into an
         // unaliasable `UniqueVec`.
@@ -25,6 +26,20 @@ impl<T> Vec<T> {
         mem::forget(vec);
         // Return the `UniqueVec`.
         unique
+    }
+
+    pub fn into_unique_pinned(pin: Pin<Vec<T>>) -> Pin<UniqueVec<T>> {
+        unsafe {
+            let aliasable = Pin::into_inner_unchecked(pin);
+            Pin::new_unchecked(Vec::into_unique(aliasable))
+        }
+    }
+
+    pub fn from_unique_pinned(pin: Pin<UniqueVec<T>>) -> Pin<Vec<T>> {
+        unsafe {
+            let unique = Pin::into_inner_unchecked(pin);
+            Pin::new_unchecked(Vec::from(unique))
+        }
     }
 
     #[inline]
@@ -51,7 +66,7 @@ impl<T> From<UniqueVec<T>> for Vec<T> {
 impl<T> From<Vec<T>> for UniqueVec<T> {
     #[inline]
     fn from(vec: Vec<T>) -> Self {
-        Vec::into_unique_vec(vec)
+        Vec::into_unique(vec)
     }
 }
 
@@ -73,7 +88,7 @@ impl<T> Deref for Vec<T> {
     }
 }
 
-impl<T> AsRef<[T]> for Vec<T>  {
+impl<T> AsRef<[T]> for Vec<T> {
     fn as_ref(&self) -> &[T] {
         self.deref()
     }

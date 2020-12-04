@@ -3,6 +3,7 @@
 use alloc::string::String as UniqueString;
 use core::ops::Deref;
 use core::str;
+use core::pin::Pin;
 
 use crate::vec::Vec;
 
@@ -14,9 +15,23 @@ impl String {
     }
 
     #[inline]
-    pub fn into_unique_string(s: String) -> UniqueString {
+    pub fn into_unique(s: String) -> UniqueString {
         let unique_bytes = s.into_bytes().into();
         unsafe { UniqueString::from_utf8_unchecked(unique_bytes) }
+    }
+
+    pub fn into_unique_pinned(pin: Pin<String>) -> Pin<UniqueString> {
+        unsafe {
+            let aliasable = Pin::into_inner_unchecked(pin);
+            Pin::new_unchecked(String::into_unique(aliasable))
+        }
+    }
+
+    pub fn from_unique_pinned(pin: Pin<UniqueString>) -> Pin<String> {
+        unsafe {
+            let unique = Pin::into_inner_unchecked(pin);
+            Pin::new_unchecked(String::from(unique))
+        }
     }
 }
 
@@ -30,7 +45,7 @@ impl From<UniqueString> for String {
 impl From<String> for UniqueString {
     #[inline]
     fn from(s: String) -> Self {
-        String::into_unique_string(s)
+        String::into_unique(s)
     }
 }
 
