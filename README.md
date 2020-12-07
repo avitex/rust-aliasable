@@ -22,7 +22,8 @@ data.
 `aliasable` is not designed to provide a full interface for container types,
 simply to provide aliasable (non `core::ptr::Unique`) alternatives for
 dereferencing their owned data. When converting from a unique to an aliasable
-alternative, no data referenced is mutated (one-to-one internal representation).
+alternative, no data referenced is mutated (one-to-one internal representation
+aside from the non `core::ptr::Unique` pointer).
 
 ## Usage
 
