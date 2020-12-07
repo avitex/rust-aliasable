@@ -2,7 +2,7 @@
 
 use core::ops::Deref;
 use core::pin::Pin;
-use core::str;
+use core::{fmt, str};
 
 use crate::vec::AliasableVec;
 
@@ -74,6 +74,12 @@ impl AsRef<str> for AliasableString {
     #[inline]
     fn as_ref(&self) -> &str {
         self.deref()
+    }
+}
+
+impl fmt::Debug for AliasableString {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(self.as_ref(), f)
     }
 }
 

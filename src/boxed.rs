@@ -94,7 +94,7 @@ where
     T: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("Box").field(&self.as_ref()).finish()
+        fmt::Debug::fmt(self.as_ref(), f)
     }
 }
 
