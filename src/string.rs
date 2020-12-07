@@ -1,6 +1,6 @@
 //! Aliasable `String`.
 
-use core::ops::Deref;
+use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::{fmt, str};
 
@@ -64,9 +64,17 @@ impl Deref for AliasableString {
     type Target = str;
 
     #[inline]
-    fn deref(self: &'_ Self) -> &'_ str {
+    fn deref(self: &Self) -> &str {
         // SAFETY: `AliasableString` will only ever contain UTF-8.
         unsafe { str::from_utf8_unchecked(&*self.0) }
+    }
+}
+
+impl DerefMut for AliasableString {
+    #[inline]
+    fn deref_mut(self: &mut Self) -> &mut str {
+        // SAFETY: `AliasableString` will only ever contain UTF-8.
+        unsafe { str::from_utf8_unchecked_mut(&mut *self.0) }
     }
 }
 
@@ -74,6 +82,12 @@ impl AsRef<str> for AliasableString {
     #[inline]
     fn as_ref(&self) -> &str {
         self.deref()
+    }
+}
+
+impl AsMut<str> for AliasableString {
+    fn as_mut(&mut self) -> &mut str {
+        self.deref_mut()
     }
 }
 

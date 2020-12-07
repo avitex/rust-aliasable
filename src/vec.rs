@@ -1,8 +1,9 @@
 //! Aliasable `Vec`.
 
+use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
+use core::ptr::NonNull;
 use core::{fmt, mem, slice};
-use core::{ops::Deref, ptr::NonNull};
 
 pub use alloc::vec::Vec as UniqueVec;
 
@@ -90,14 +91,29 @@ impl<T> Deref for AliasableVec<T> {
     type Target = [T];
 
     #[inline]
-    fn deref(self: &'_ Self) -> &'_ [T] {
+    fn deref(self: &Self) -> &[T] {
+        // SAFETY: We own the data, so we can return a reference to it.
         unsafe { slice::from_raw_parts(self.ptr.as_ptr(), self.len) }
+    }
+}
+
+impl<T> DerefMut for AliasableVec<T> {
+    #[inline]
+    fn deref_mut(self: &mut Self) -> &mut [T] {
+        // SAFETY: We own the data, so we can return a reference to it.
+        unsafe { slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len) }
     }
 }
 
 impl<T> AsRef<[T]> for AliasableVec<T> {
     fn as_ref(&self) -> &[T] {
         self.deref()
+    }
+}
+
+impl<T> AsMut<[T]> for AliasableVec<T> {
+    fn as_mut(&mut self) -> &mut [T] {
+        self.deref_mut()
     }
 }
 

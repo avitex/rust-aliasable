@@ -1,8 +1,9 @@
 //! Aliasable `Box`.
 
+use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
+use core::ptr::NonNull;
 use core::{fmt, mem};
-use core::{ops::Deref, ptr::NonNull};
 
 pub use alloc::boxed::Box as UniqueBox;
 
@@ -82,10 +83,24 @@ impl<T: ?Sized> Deref for AliasableBox<T> {
     }
 }
 
+impl<T: ?Sized> DerefMut for AliasableBox<T> {
+    #[inline]
+    fn deref_mut(self: &mut Self) -> &mut T {
+        // SAFETY: We own the data, so we can return a reference to it.
+        unsafe { self.0.as_mut() }
+    }
+}
+
 impl<T: ?Sized> AsRef<T> for AliasableBox<T> {
     #[inline]
     fn as_ref(&self) -> &T {
         self.deref()
+    }
+}
+
+impl<T: ?Sized> AsMut<T> for AliasableBox<T> {
+    fn as_mut(&mut self) -> &mut T {
+        self.deref_mut()
     }
 }
 
@@ -103,3 +118,14 @@ unsafe impl<T: ?Sized> crate::StableDeref for AliasableBox<T> {}
 
 #[cfg(feature = "traits")]
 unsafe impl<T: ?Sized> crate::AliasableDeref for AliasableBox<T> {}
+
+#[cfg(test)]
+mod tests {
+    use super::{AliasableBox, UniqueBox};
+
+    #[test]
+    fn test_basic() {
+        let b = AliasableBox::from_unique(UniqueBox::new(1));
+        assert_eq!(*b, 1);
+    }
+}
