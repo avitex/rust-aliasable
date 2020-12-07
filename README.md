@@ -12,12 +12,24 @@ Documentation hosted on [docs.rs](https://docs.rs/aliasable).
 aliasable = "0.1"
 ```
 
+## Why?
+
+Used for escaping `noalias` when multiple raw pointers may point to the same
+data.
+
+## Goals
+
+`aliasable` is not designed to provide a full interface for container types,
+simply to provide aliasable (non `core::ptr::Unique`) alternatives for
+dereferencing their owned data. When converting from a unique to an aliasable
+alternative, no data referenced is mutated (one-to-one internal representation).
+
 ## Usage
 
 ```rust
 use aliasable::vec::AliasableVec;
 
-// Rexported via `aliasable::vec::UniqueVec`
+// Re-exported via `aliasable::vec::UniqueVec`
 let unique = Vec::from(&[1, 2, 3][..]);
 let aliasable = AliasableVec::from(unique);
 ```
