@@ -18,6 +18,11 @@ impl AliasableString {
         self.0
     }
 
+    /// Construct an `AliasableString` from a [`UniqueString`].
+    pub fn from_unique(s: UniqueString) -> Self {
+        Self(s.into_bytes().into())
+    }
+
     /// Consumes `self` and converts it into a non-aliasable [`UniqueString`].
     #[inline]
     pub fn into_unique(s: AliasableString) -> UniqueString {
@@ -49,7 +54,7 @@ impl AliasableString {
 impl From<UniqueString> for AliasableString {
     #[inline]
     fn from(s: UniqueString) -> Self {
-        Self(s.into_bytes().into())
+        Self::from_unique(s)
     }
 }
 
@@ -102,3 +107,51 @@ unsafe impl crate::StableDeref for AliasableString {}
 
 #[cfg(feature = "traits")]
 unsafe impl crate::AliasableDeref for AliasableString {}
+
+#[cfg(test)]
+mod tests {
+    use super::{AliasableString, AliasableVec, UniqueString};
+    use alloc::{format, vec};
+    use core::pin::Pin;
+
+    #[test]
+    fn test_new() {
+        let aliasable = AliasableString::from_unique(UniqueString::from("hello"));
+        assert_eq!(&*aliasable, &"hello"[..]);
+        let unique = AliasableString::into_unique(aliasable);
+        assert_eq!(&*unique, &"hello"[..]);
+    }
+
+    #[test]
+    fn test_new_pin() {
+        let aliasable = AliasableString::from_unique_pin(Pin::new(UniqueString::from("hello")));
+        assert_eq!(&*aliasable, &"hello"[..]);
+        let unique = AliasableString::into_unique_pin(aliasable);
+        assert_eq!(&*unique, &"hello"[..]);
+    }
+
+    #[test]
+    fn test_refs() {
+        let mut aliasable = AliasableString::from_unique(UniqueString::from("hello"));
+        let ptr: *const str = &*aliasable;
+        let as_mut_ptr: *const str = aliasable.as_mut();
+        let as_ref_ptr: *const str = aliasable.as_ref();
+        assert_eq!(ptr, as_mut_ptr);
+        assert_eq!(ptr, as_ref_ptr);
+    }
+
+    #[test]
+    fn test_debug() {
+        let aliasable = AliasableString::from_unique(UniqueString::from("hello"));
+        assert_eq!(format!("{:?}", aliasable), "\"hello\"");
+    }
+
+    #[test]
+    fn test_into_bytes() {
+        let aliasable = AliasableString::from_unique(UniqueString::from("hello"));
+        assert_eq!(
+            AliasableVec::into_unique(aliasable.into_bytes()),
+            vec![b'h', b'e', b'l', b'l', b'o']
+        );
+    }
+}

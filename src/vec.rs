@@ -16,6 +16,19 @@ pub struct AliasableVec<T> {
 }
 
 impl<T> AliasableVec<T> {
+    /// Construct an `AliasableVec` from a [`UniqueVec`].
+    pub fn from_unique(mut vec: UniqueVec<T>) -> Self {
+        let ptr = vec.as_mut_ptr();
+        let len = vec.len();
+        let cap = vec.capacity();
+
+        mem::forget(vec);
+
+        let ptr = unsafe { NonNull::new_unchecked(ptr) };
+
+        Self { ptr, len, cap }
+    }
+
     /// Consumes the [`AliasableVec`] and converts it back into a
     /// non-aliasable [`UniqueVec`].
     #[inline]
@@ -58,16 +71,8 @@ impl<T> AliasableVec<T> {
 
 impl<T> From<UniqueVec<T>> for AliasableVec<T> {
     #[inline]
-    fn from(mut vec: UniqueVec<T>) -> Self {
-        let ptr = vec.as_mut_ptr();
-        let len = vec.len();
-        let cap = vec.capacity();
-
-        mem::forget(vec);
-
-        let ptr = unsafe { NonNull::new_unchecked(ptr) };
-
-        Self { ptr, len, cap }
+    fn from(vec: UniqueVec<T>) -> Self {
+        Self::from_unique(vec)
     }
 }
 
@@ -131,3 +136,42 @@ unsafe impl<T> crate::StableDeref for AliasableVec<T> {}
 
 #[cfg(feature = "traits")]
 unsafe impl<T> crate::AliasableDeref for AliasableVec<T> {}
+
+#[cfg(test)]
+mod tests {
+    use super::AliasableVec;
+    use alloc::{format, vec};
+    use core::pin::Pin;
+
+    #[test]
+    fn test_new() {
+        let aliasable = AliasableVec::from_unique(vec![1u8]);
+        assert_eq!(&*aliasable, &[1]);
+        let unique = AliasableVec::into_unique(aliasable);
+        assert_eq!(&*unique, &[1]);
+    }
+
+    #[test]
+    fn test_new_pin() {
+        let aliasable = AliasableVec::from_unique_pin(Pin::new(vec![1u8]));
+        assert_eq!(&*aliasable, &[1]);
+        let unique = AliasableVec::into_unique_pin(aliasable);
+        assert_eq!(&*unique, &[1]);
+    }
+
+    #[test]
+    fn test_refs() {
+        let mut aliasable = AliasableVec::from_unique(vec![1u8]);
+        let ptr: *const [u8] = &*aliasable;
+        let as_mut_ptr: *const [u8] = aliasable.as_mut();
+        let as_ref_ptr: *const [u8] = aliasable.as_ref();
+        assert_eq!(ptr, as_mut_ptr);
+        assert_eq!(ptr, as_ref_ptr);
+    }
+
+    #[test]
+    fn test_debug() {
+        let aliasable = AliasableVec::from_unique(vec![1u8]);
+        assert_eq!(format!("{:?}", aliasable), "[1]");
+    }
+}
