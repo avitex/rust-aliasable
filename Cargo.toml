@@ -10,7 +10,7 @@ homepage = "https://github.com/avitex/rust-aliasable"
 repository = "https://github.com/avitex/rust-aliasable"
 license = "MIT"
 readme = "README.md"
-include = ["src/**/*", "tests/**/*", "benches/**/*", "examples/**/*", "README.md", "LICENSE", "Cargo.toml"]
+include = ["src/**/*", "README.md", "LICENSE", "Cargo.toml"]
 
 [features]
 default = []
