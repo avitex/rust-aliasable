@@ -1,4 +1,9 @@
-//! Basic aliasable/non-unique-ptr alloc types.
+//! Basic aliasable (non `core::ptr::Unique`) types.
+//!
+//! # Why?
+//!
+//! Used for escaping `noalias` when multiple raw pointers may point to the same
+//! data.
 
 #![no_std]
 #![forbid(
@@ -6,7 +11,7 @@
     rust_2018_idioms,
     anonymous_parameters,
     unused_qualifications,
-    // missing_docs,
+    missing_docs,
     trivial_casts,
     trivial_numeric_casts,
     unstable_features,

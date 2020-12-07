@@ -6,6 +6,8 @@ use core::{ops::Deref, ptr::NonNull};
 
 pub use alloc::vec::Vec as UniqueVec;
 
+/// A basic aliasable (non `core::ptr::Unique`) alternative to
+/// [`alloc::vec::Vec`].
 pub struct AliasableVec<T> {
     ptr: NonNull<T>,
     len: usize,
@@ -17,9 +19,9 @@ impl<T> AliasableVec<T> {
     /// non-aliasable [`UniqueVec`].
     #[inline]
     pub fn into_unique(mut vec: AliasableVec<T>) -> UniqueVec<T> {
-        // As we are consuming the `Vec` structure we can safely assume any
-        // aliasing has ended and convert the aliasable `Vec` back to into an
-        // unaliasable `UniqueVec`.
+        // SAFETY: As we are consuming the `Vec` structure we can safely assume
+        // any aliasing has ended and convert the aliasable `Vec` back to into
+        // an unaliasable `UniqueVec`.
         let unique = unsafe { vec.reclaim_as_unique_vec() };
         // Forget the aliasable `Vec` so the allocation behind the `UniqueVec`
         // is not deallocated.
@@ -28,14 +30,19 @@ impl<T> AliasableVec<T> {
         unique
     }
 
-    pub fn into_unique_pinned(pin: Pin<AliasableVec<T>>) -> Pin<UniqueVec<T>> {
+    /// Convert a pinned [`AliasableVec`] to a `core::ptr::Unique` backed pinned
+    /// [`UniqueVec`].
+    pub fn into_unique_pin(pin: Pin<AliasableVec<T>>) -> Pin<UniqueVec<T>> {
+        // SAFETY: The pointer is not changed, just the container.
         unsafe {
             let aliasable = Pin::into_inner_unchecked(pin);
             Pin::new_unchecked(AliasableVec::into_unique(aliasable))
         }
     }
 
-    pub fn from_unique_pinned(pin: Pin<UniqueVec<T>>) -> Pin<AliasableVec<T>> {
+    /// Convert a pinned `core::ptr::Unique` backed [`UniqueVec`] to a
+    /// pinned [`AliasableVec`].
+    pub fn from_unique_pin(pin: Pin<UniqueVec<T>>) -> Pin<AliasableVec<T>> {
         unsafe {
             let unique = Pin::into_inner_unchecked(pin);
             Pin::new_unchecked(AliasableVec::from(unique))

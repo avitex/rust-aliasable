@@ -5,7 +5,7 @@
 
 # rust-aliasable
 
-**Rust library for basic aliasable/non-unique-ptr alloc types**  
+**Rust library providing basic aliasable (non `core::ptr::Unique`) types**  
 Documentation hosted on [docs.rs](https://docs.rs/aliasable).
 
 ```toml
@@ -14,4 +14,10 @@ aliasable = "0.1"
 
 ## Usage
 
-## Why?
+```rust
+use aliasable::vec::AliasableVec;
+
+// Rexported via `aliasable::vec::UniqueVec`
+let unique = Vec::from(&[1, 2, 3][..]);
+let aliasable = AliasableVec::from(unique);
+```

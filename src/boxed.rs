@@ -6,11 +6,18 @@ use core::{ops::Deref, ptr::NonNull};
 
 pub use alloc::boxed::Box as UniqueBox;
 
+/// A basic aliasable (non `core::ptr::Unique`) alternative to
+/// [`alloc::boxed::Box`].
 pub struct AliasableBox<T: ?Sized>(NonNull<T>);
 
 impl<T: ?Sized> AliasableBox<T> {
-    /// Consumes the aliasable box and converts it back into a
-    /// non-aliasable `Box`.
+    /// Construct an `AliasableBox` from a [`UniqueBox`].
+    pub fn from_unique(ptr: UniqueBox<T>) -> Self {
+        let ptr = unsafe { NonNull::new_unchecked(UniqueBox::into_raw(ptr)) };
+        Self(ptr)
+    }
+
+    /// Consumes `self` and converts it into a non-aliasable [`UniqueBox`].
     #[inline]
     pub fn into_unique(mut ptr: AliasableBox<T>) -> UniqueBox<T> {
         // As we are consuming the `Box` structure we can safely assume any
@@ -24,14 +31,20 @@ impl<T: ?Sized> AliasableBox<T> {
         unique
     }
 
-    pub fn into_unique_pinned(pin: Pin<AliasableBox<T>>) -> Pin<UniqueBox<T>> {
+    /// Convert a pinned [`AliasableBox`] to a `core::ptr::Unique` backed pinned
+    /// [`UniqueBox`].
+    pub fn into_unique_pin(pin: Pin<AliasableBox<T>>) -> Pin<UniqueBox<T>> {
+        // SAFETY: The pointer is not changed, just the container.
         unsafe {
             let aliasable = Pin::into_inner_unchecked(pin);
             Pin::new_unchecked(AliasableBox::into_unique(aliasable))
         }
     }
 
-    pub fn from_unique_pinned(pin: Pin<UniqueBox<T>>) -> Pin<AliasableBox<T>> {
+    /// Convert a pinned `core::ptr::Unique` backed [`UniqueBox`] to a
+    /// pinned [`AliasableBox`].
+    pub fn from_unique_pin(pin: Pin<UniqueBox<T>>) -> Pin<AliasableBox<T>> {
+        // SAFETY: The pointer is not changed, just the container.
         unsafe {
             let unique = Pin::into_inner_unchecked(pin);
             Pin::new_unchecked(AliasableBox::from(unique))
@@ -45,18 +58,16 @@ impl<T: ?Sized> AliasableBox<T> {
 }
 
 impl<T: ?Sized> From<UniqueBox<T>> for AliasableBox<T> {
-    #[inline]
     fn from(ptr: UniqueBox<T>) -> Self {
-        let ptr = unsafe { NonNull::new_unchecked(UniqueBox::into_raw(ptr)) };
-        Self(ptr)
+        Self::from_unique(ptr)
     }
 }
 
 impl<T: ?Sized> Drop for AliasableBox<T> {
     fn drop(self: &'_ mut Self) {
-        // As the `Box` structure is being dropped we can safely assume any
-        // aliasing has ended and convert the aliasable `Box` back to into an
-        // unaliasable `UniqueBox` to handle the deallocation.
+        // SAFETY: As `self` is being dropped we can safely assume any aliasing
+        // has ended and convert the `AliasableBox` back to into an unaliasable
+        // `UniqueBox` to handle the deallocation.
         let _ = unsafe { self.reclaim_as_unique_box() };
     }
 }
@@ -65,7 +76,8 @@ impl<T: ?Sized> Deref for AliasableBox<T> {
     type Target = T;
 
     #[inline]
-    fn deref(self: &'_ Self) -> &'_ T {
+    fn deref(self: &Self) -> &T {
+        // SAFETY: We own the data, so we can return a reference to it.
         unsafe { self.0.as_ref() }
     }
 }

@@ -8,27 +8,37 @@ use crate::vec::AliasableVec;
 
 pub use alloc::string::String as UniqueString;
 
+/// A basic aliasable (non `core::ptr::Unique`) alternative to
+/// [`alloc::string::String`].
 pub struct AliasableString(AliasableVec<u8>);
 
 impl AliasableString {
+    /// Consumes `self` into an [`AliasableVec`] of UTF-8 bytes.
     pub fn into_bytes(self) -> AliasableVec<u8> {
         self.0
     }
 
+    /// Consumes `self` and converts it into a non-aliasable [`UniqueString`].
     #[inline]
     pub fn into_unique(s: AliasableString) -> UniqueString {
         let unique_bytes = s.into_bytes().into();
         unsafe { UniqueString::from_utf8_unchecked(unique_bytes) }
     }
 
-    pub fn into_unique_pinned(pin: Pin<AliasableString>) -> Pin<UniqueString> {
+    /// Convert a pinned [`AliasableString`] to a `core::ptr::Unique` backed pinned
+    /// [`UniqueString`].
+    pub fn into_unique_pin(pin: Pin<AliasableString>) -> Pin<UniqueString> {
+        // SAFETY: The pointer is not changed, just the container.
         unsafe {
             let aliasable = Pin::into_inner_unchecked(pin);
             Pin::new_unchecked(AliasableString::into_unique(aliasable))
         }
     }
 
-    pub fn from_unique_pinned(pin: Pin<UniqueString>) -> Pin<AliasableString> {
+    /// Convert a pinned `core::ptr::Unique` backed [`UniqueString`] to a
+    /// pinned [`AliasableString`].
+    pub fn from_unique_pin(pin: Pin<UniqueString>) -> Pin<AliasableString> {
+        // SAFETY: The pointer is not changed, just the container.
         unsafe {
             let unique = Pin::into_inner_unchecked(pin);
             Pin::new_unchecked(AliasableString::from(unique))
@@ -55,11 +65,13 @@ impl Deref for AliasableString {
 
     #[inline]
     fn deref(self: &'_ Self) -> &'_ str {
+        // SAFETY: `AliasableString` will only ever contain UTF-8.
         unsafe { str::from_utf8_unchecked(&*self.0) }
     }
 }
 
 impl AsRef<str> for AliasableString {
+    #[inline]
     fn as_ref(&self) -> &str {
         self.deref()
     }

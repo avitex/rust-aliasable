@@ -3,7 +3,7 @@ name = "aliasable"
 version = "0.1.0"
 authors = ["avitex <avitex@wfxlabs.com>"]
 edition = "2018"
-description = "Basic aliasable/non-unique-ptr alloc types"
+description = "Basic aliasable (non unique pointer) types"
 categories = ["no-std", "data-structures"]
 documentation = "https://docs.rs/aliasable"
 homepage = "https://github.com/avitex/rust-aliasable"
@@ -13,7 +13,7 @@ readme = "README.md"
 include = ["src/**/*", "tests/**/*", "benches/**/*", "examples/**/*", "README.md", "LICENSE", "Cargo.toml"]
 
 [features]
-default = ["traits"]
+default = []
 traits = ["stable_deref_trait", "aliasable_deref_trait"]
 
 [dependencies]
