@@ -114,6 +114,7 @@ where
 }
 
 unsafe impl<T: ?Sized> Send for AliasableBox<T> where T: Send {}
+unsafe impl<T: ?Sized> Sync for AliasableBox<T> where T: Sync {}
 
 #[cfg(feature = "traits")]
 unsafe impl<T: ?Sized> crate::StableDeref for AliasableBox<T> {}

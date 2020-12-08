@@ -132,6 +132,7 @@ where
 }
 
 unsafe impl<T> Send for AliasableVec<T> where T: Send {}
+unsafe impl<T> Sync for AliasableVec<T> where T: Sync {}
 
 #[cfg(feature = "traits")]
 unsafe impl<T> crate::StableDeref for AliasableVec<T> {}
