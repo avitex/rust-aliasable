@@ -1,6 +1,6 @@
 [package]
 name = "aliasable"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["avitex <avitex@wfxlabs.com>"]
 edition = "2018"
 description = "Basic aliasable (non unique pointer) types"
