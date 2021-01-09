@@ -7,6 +7,15 @@ use core::ops::{Deref, DerefMut};
 use core::marker::PhantomData;
 
 /// A basic aliasable alternative to `&mut`.
+///
+/// Note that this does not circumvent the core aliasing rules of Rust; if you use this to create
+/// multiple mutable references to a memory location at the same time, that is still UB. This type
+/// just adds a few abilities:
+///
+/// - You may hold any number of `AliasableMut`s and no references to a location.
+/// - You may hold any number of `AliasableMut`s and any number of shared references to a location
+/// at once.
+/// - You may hold any number of `AliasableMut`s and one mutable reference to a location at once.
 pub struct AliasableMut<'a, T: ?Sized> {
     inner: NonNull<T>,
     _lifetime: PhantomData<&'a ()>,
