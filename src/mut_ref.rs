@@ -1,10 +1,10 @@
 //! Aliasable `&mut`.
 
-use core::ptr::NonNull;
-use core::pin::Pin;
 use core::fmt;
-use core::ops::{Deref, DerefMut};
 use core::marker::PhantomData;
+use core::ops::{Deref, DerefMut};
+use core::pin::Pin;
+use core::ptr::NonNull;
 
 /// A basic aliasable alternative to `&mut`.
 ///
@@ -117,9 +117,9 @@ unsafe impl<T: ?Sized> crate::AliasableDeref for AliasableMut<'_, T> {}
 #[cfg(test)]
 mod tests {
     use super::AliasableMut;
-    use core::pin::Pin;
-    use alloc::format;
     use alloc::boxed::Box;
+    use alloc::format;
+    use core::pin::Pin;
 
     #[test]
     fn test_new() {
