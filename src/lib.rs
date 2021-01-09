@@ -24,6 +24,7 @@
 extern crate alloc;
 
 pub mod boxed;
+pub mod mut_ref;
 pub mod string;
 pub mod vec;
 
