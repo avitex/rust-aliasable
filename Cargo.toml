@@ -1,6 +1,6 @@
 [package]
 name = "aliasable"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["avitex <avitex@wfxlabs.com>"]
 edition = "2018"
 description = "Basic aliasable (non unique pointer) types"
@@ -10,7 +10,7 @@ homepage = "https://github.com/avitex/rust-aliasable"
 repository = "https://github.com/avitex/rust-aliasable"
 license = "MIT"
 readme = "README.md"
-include = ["src/**/*", "README.md", "LICENSE", "Cargo.toml"]
+include = ["src/**/*", "README.md", "CHANGELOG.md", "LICENSE", "Cargo.toml"]
 
 [features]
 default = ["alloc"]
