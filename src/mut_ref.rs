@@ -6,7 +6,7 @@ use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::ptr::NonNull;
 
-/// A basic aliasable alternative to `&mut`.
+/// Basic aliasable alternative to `&mut`.
 ///
 /// Note that this does not circumvent the core aliasing rules of Rust; if you use this to create
 /// multiple mutable references to a memory location at the same time, that is still UB. This type

@@ -7,7 +7,7 @@ use core::{fmt, mem};
 
 pub use alloc::boxed::Box as UniqueBox;
 
-/// A basic aliasable (non `core::ptr::Unique`) alternative to
+/// Basic aliasable (non `core::ptr::Unique`) alternative to
 /// [`alloc::boxed::Box`].
 pub struct AliasableBox<T: ?Sized>(NonNull<T>);
 
@@ -53,7 +53,7 @@ impl<T: ?Sized> AliasableBox<T> {
     }
 
     #[inline]
-    unsafe fn reclaim_as_unique_box(self: &'_ mut Self) -> UniqueBox<T> {
+    unsafe fn reclaim_as_unique_box(&mut self) -> UniqueBox<T> {
         UniqueBox::from_raw(self.0.as_ptr())
     }
 }
@@ -65,7 +65,7 @@ impl<T: ?Sized> From<UniqueBox<T>> for AliasableBox<T> {
 }
 
 impl<T: ?Sized> Drop for AliasableBox<T> {
-    fn drop(self: &'_ mut Self) {
+    fn drop(&mut self) {
         // SAFETY: As `self` is being dropped we can safely assume any aliasing
         // has ended and convert the `AliasableBox` back to into an unaliasable
         // `UniqueBox` to handle the deallocation.
@@ -77,7 +77,7 @@ impl<T: ?Sized> Deref for AliasableBox<T> {
     type Target = T;
 
     #[inline]
-    fn deref(self: &Self) -> &T {
+    fn deref(&self) -> &T {
         // SAFETY: We own the data, so we can return a reference to it.
         unsafe { self.0.as_ref() }
     }
@@ -85,7 +85,7 @@ impl<T: ?Sized> Deref for AliasableBox<T> {
 
 impl<T: ?Sized> DerefMut for AliasableBox<T> {
     #[inline]
-    fn deref_mut(self: &mut Self) -> &mut T {
+    fn deref_mut(&mut self) -> &mut T {
         // SAFETY: We own the data, so we can return a reference to it.
         unsafe { self.0.as_mut() }
     }
@@ -94,13 +94,13 @@ impl<T: ?Sized> DerefMut for AliasableBox<T> {
 impl<T: ?Sized> AsRef<T> for AliasableBox<T> {
     #[inline]
     fn as_ref(&self) -> &T {
-        self.deref()
+        &*self
     }
 }
 
 impl<T: ?Sized> AsMut<T> for AliasableBox<T> {
     fn as_mut(&mut self) -> &mut T {
-        self.deref_mut()
+        &mut *self
     }
 }
 
@@ -129,23 +129,23 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let aliasable = AliasableBox::from_unique(UniqueBox::new(1u8));
-        assert_eq!(*aliasable, 1);
+        let aliasable = AliasableBox::from_unique(UniqueBox::new(10));
+        assert_eq!(*aliasable, 10);
         let unique = AliasableBox::into_unique(aliasable);
-        assert_eq!(*unique, 1);
+        assert_eq!(*unique, 10);
     }
 
     #[test]
     fn test_new_pin() {
-        let aliasable = AliasableBox::from_unique_pin(UniqueBox::pin(1u8));
-        assert_eq!(*aliasable, 1);
+        let aliasable = AliasableBox::from_unique_pin(UniqueBox::pin(10));
+        assert_eq!(*aliasable, 10);
         let unique = AliasableBox::into_unique_pin(aliasable);
-        assert_eq!(*unique, 1);
+        assert_eq!(*unique, 10);
     }
 
     #[test]
     fn test_refs() {
-        let mut aliasable = AliasableBox::from_unique(UniqueBox::new(1u8));
+        let mut aliasable = AliasableBox::from_unique(UniqueBox::new(10));
         let ptr: *const u8 = &*aliasable;
         let as_mut_ptr: *const u8 = aliasable.as_mut();
         let as_ref_ptr: *const u8 = aliasable.as_ref();
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_debug() {
-        let aliasable = AliasableBox::from_unique(UniqueBox::new(1u8));
-        assert_eq!(format!("{:?}", aliasable), "1");
+        let aliasable = AliasableBox::from_unique(UniqueBox::new(10));
+        assert_eq!(format!("{:?}", aliasable), "10");
     }
 }

@@ -7,7 +7,7 @@ use core::{fmt, mem, slice};
 
 pub use alloc::vec::Vec as UniqueVec;
 
-/// A basic aliasable (non `core::ptr::Unique`) alternative to
+/// Basic aliasable (non `core::ptr::Unique`) alternative to
 /// [`alloc::vec::Vec`].
 pub struct AliasableVec<T> {
     ptr: NonNull<T>,
@@ -64,7 +64,7 @@ impl<T> AliasableVec<T> {
     }
 
     #[inline]
-    unsafe fn reclaim_as_unique_vec(self: &'_ mut Self) -> UniqueVec<T> {
+    unsafe fn reclaim_as_unique_vec(&mut self) -> UniqueVec<T> {
         UniqueVec::from_raw_parts(self.ptr.as_mut(), self.len, self.cap)
     }
 }
@@ -84,7 +84,7 @@ impl<T> From<AliasableVec<T>> for UniqueVec<T> {
 }
 
 impl<T> Drop for AliasableVec<T> {
-    fn drop(self: &'_ mut Self) {
+    fn drop(&mut self) {
         // As the `Vec` structure is being dropped we can safely assume any
         // aliasing has ended and convert the aliasable `Vec` back to into an
         // unaliasable `UniqueVec` to handle the deallocation.
@@ -96,7 +96,7 @@ impl<T> Deref for AliasableVec<T> {
     type Target = [T];
 
     #[inline]
-    fn deref(self: &Self) -> &[T] {
+    fn deref(&self) -> &[T] {
         // SAFETY: We own the data, so we can return a reference to it.
         unsafe { slice::from_raw_parts(self.ptr.as_ptr(), self.len) }
     }
@@ -104,7 +104,7 @@ impl<T> Deref for AliasableVec<T> {
 
 impl<T> DerefMut for AliasableVec<T> {
     #[inline]
-    fn deref_mut(self: &mut Self) -> &mut [T] {
+    fn deref_mut(&mut self) -> &mut [T] {
         // SAFETY: We own the data, so we can return a reference to it.
         unsafe { slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len) }
     }
@@ -112,13 +112,13 @@ impl<T> DerefMut for AliasableVec<T> {
 
 impl<T> AsRef<[T]> for AliasableVec<T> {
     fn as_ref(&self) -> &[T] {
-        self.deref()
+        &*self
     }
 }
 
 impl<T> AsMut<[T]> for AliasableVec<T> {
     fn as_mut(&mut self) -> &mut [T] {
-        self.deref_mut()
+        &mut *self
     }
 }
 
@@ -148,23 +148,23 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let aliasable = AliasableVec::from_unique(vec![1u8]);
-        assert_eq!(&*aliasable, &[1]);
+        let aliasable = AliasableVec::from_unique(vec![10]);
+        assert_eq!(&*aliasable, &[10]);
         let unique = AliasableVec::into_unique(aliasable);
-        assert_eq!(&*unique, &[1]);
+        assert_eq!(&*unique, &[10]);
     }
 
     #[test]
     fn test_new_pin() {
-        let aliasable = AliasableVec::from_unique_pin(Pin::new(vec![1u8]));
-        assert_eq!(&*aliasable, &[1]);
+        let aliasable = AliasableVec::from_unique_pin(Pin::new(vec![10]));
+        assert_eq!(&*aliasable, &[10]);
         let unique = AliasableVec::into_unique_pin(aliasable);
-        assert_eq!(&*unique, &[1]);
+        assert_eq!(&*unique, &[10]);
     }
 
     #[test]
     fn test_refs() {
-        let mut aliasable = AliasableVec::from_unique(vec![1u8]);
+        let mut aliasable = AliasableVec::from_unique(vec![10]);
         let ptr: *const [u8] = &*aliasable;
         let as_mut_ptr: *const [u8] = aliasable.as_mut();
         let as_ref_ptr: *const [u8] = aliasable.as_ref();
@@ -174,7 +174,7 @@ mod tests {
 
     #[test]
     fn test_debug() {
-        let aliasable = AliasableVec::from_unique(vec![1u8]);
-        assert_eq!(format!("{:?}", aliasable), "[1]");
+        let aliasable = AliasableVec::from_unique(vec![10]);
+        assert_eq!(format!("{:?}", aliasable), "[10]");
     }
 }

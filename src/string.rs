@@ -8,7 +8,7 @@ use crate::vec::AliasableVec;
 
 pub use alloc::string::String as UniqueString;
 
-/// A basic aliasable (non `core::ptr::Unique`) alternative to
+/// Basic aliasable (non `core::ptr::Unique`) alternative to
 /// [`alloc::string::String`].
 pub struct AliasableString(AliasableVec<u8>);
 
@@ -69,7 +69,7 @@ impl Deref for AliasableString {
     type Target = str;
 
     #[inline]
-    fn deref(self: &Self) -> &str {
+    fn deref(&self) -> &str {
         // SAFETY: `AliasableString` will only ever contain UTF-8.
         unsafe { str::from_utf8_unchecked(&*self.0) }
     }
@@ -77,7 +77,7 @@ impl Deref for AliasableString {
 
 impl DerefMut for AliasableString {
     #[inline]
-    fn deref_mut(self: &mut Self) -> &mut str {
+    fn deref_mut(&mut self) -> &mut str {
         // SAFETY: `AliasableString` will only ever contain UTF-8.
         unsafe { str::from_utf8_unchecked_mut(&mut *self.0) }
     }
@@ -86,13 +86,13 @@ impl DerefMut for AliasableString {
 impl AsRef<str> for AliasableString {
     #[inline]
     fn as_ref(&self) -> &str {
-        self.deref()
+        &*self
     }
 }
 
 impl AsMut<str> for AliasableString {
     fn as_mut(&mut self) -> &mut str {
-        self.deref_mut()
+        &mut *self
     }
 }
 

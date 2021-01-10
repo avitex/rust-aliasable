@@ -20,6 +20,12 @@
     unused_results,
     warnings
 )]
+#![allow(
+    clippy::needless_pass_by_value,
+    clippy::wrong_self_convention,
+    clippy::must_use_candidate,
+    clippy::module_name_repetitions
+)]
 
 extern crate alloc;
 
