@@ -13,9 +13,14 @@ readme = "README.md"
 include = ["src/**/*", "README.md", "LICENSE", "Cargo.toml"]
 
 [features]
-default = []
+default = ["alloc"]
+alloc = []
 traits = ["stable_deref_trait", "aliasable_deref_trait"]
 
 [dependencies]
 stable_deref_trait = { version = "1.2", optional = true }
 aliasable_deref_trait = { version = "0.2", optional = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

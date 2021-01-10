@@ -6,6 +6,7 @@
 //! data.
 
 #![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![forbid(
     clippy::pedantic,
     rust_2018_idioms,
@@ -27,12 +28,31 @@
     clippy::module_name_repetitions
 )]
 
+#[cfg(any(test, feature = "alloc"))]
 extern crate alloc;
 
+mod mut_ref;
+
+#[cfg(feature = "alloc")]
 pub mod boxed;
-pub mod mut_ref;
+#[cfg(feature = "alloc")]
 pub mod string;
+#[cfg(feature = "alloc")]
 pub mod vec;
+
+pub use crate::mut_ref::AliasableMut;
+
+/// Export of all types enabled.
+pub mod prelude {
+    #[cfg(feature = "alloc")]
+    pub use crate::boxed::*;
+    #[cfg(feature = "alloc")]
+    pub use crate::string::*;
+    #[cfg(feature = "alloc")]
+    pub use crate::vec::*;
+
+    pub use crate::mut_ref::*;
+}
 
 #[cfg(feature = "traits")]
 pub use aliasable_deref_trait::AliasableDeref;
