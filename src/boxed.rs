@@ -122,6 +122,21 @@ unsafe impl<T: ?Sized> crate::StableDeref for AliasableBox<T> {}
 #[cfg(feature = "traits")]
 unsafe impl<T: ?Sized> crate::AliasableDeref for AliasableBox<T> {}
 
+#[cfg(feature = "unsize")]
+unsafe impl<T, U: ?Sized> unsize::CoerciblePtr<U> for AliasableBox<T> {
+    type Pointee = T;
+    type Output = AliasableBox<U>;
+
+    fn as_sized_ptr(&mut self) -> *mut T {
+        self.0.as_ptr()
+    }
+
+    unsafe fn replace_ptr(self, new: *mut U) -> AliasableBox<U> {
+        let this = mem::ManuallyDrop::new(self);
+        AliasableBox(this.0.replace_ptr(new))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{AliasableBox, UniqueBox};
@@ -157,5 +172,14 @@ mod tests {
     fn test_debug() {
         let aliasable = AliasableBox::from_unique(UniqueBox::new(10));
         assert_eq!(format!("{:?}", aliasable), "10");
+    }
+
+    #[cfg(feature = "unsize")]
+    #[test]
+    fn test_unsize() {
+        use unsize::{Coercion, CoerceUnsize};
+        let aliasable = AliasableBox::from_unique(UniqueBox::new([0u8; 2]));
+        let unsized_box: AliasableBox<[u8]> = aliasable.unsize(Coercion::to_slice());
+        assert_eq!(*unsized_box, [0, 0]);
     }
 }
