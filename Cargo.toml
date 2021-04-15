@@ -20,6 +20,7 @@ traits = ["stable_deref_trait", "aliasable_deref_trait"]
 [dependencies]
 stable_deref_trait = { version = "1.2", optional = true }
 aliasable_deref_trait = { version = "0.2", optional = true }
+unsize = { version = "1.1", optional = true }
 
 [package.metadata.docs.rs]
 all-features = true
