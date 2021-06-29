@@ -69,7 +69,7 @@ impl<T: ?Sized> Drop for AliasableBox<T> {
         // SAFETY: As `self` is being dropped we can safely assume any aliasing
         // has ended and convert the `AliasableBox` back to into an unaliasable
         // `UniqueBox` to handle the deallocation.
-        let _ = unsafe { self.reclaim_as_unique_box() };
+        let _box = unsafe { self.reclaim_as_unique_box() };
     }
 }
 

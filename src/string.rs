@@ -117,17 +117,17 @@ mod tests {
     #[test]
     fn test_new() {
         let aliasable = AliasableString::from_unique(UniqueString::from("hello"));
-        assert_eq!(&*aliasable, &"hello"[..]);
+        assert_eq!(&*aliasable, "hello");
         let unique = AliasableString::into_unique(aliasable);
-        assert_eq!(&*unique, &"hello"[..]);
+        assert_eq!(&*unique, "hello");
     }
 
     #[test]
     fn test_new_pin() {
         let aliasable = AliasableString::from_unique_pin(Pin::new(UniqueString::from("hello")));
-        assert_eq!(&*aliasable, &"hello"[..]);
+        assert_eq!(&*aliasable, "hello");
         let unique = AliasableString::into_unique_pin(aliasable);
-        assert_eq!(&*unique, &"hello"[..]);
+        assert_eq!(&*unique, "hello");
     }
 
     #[test]

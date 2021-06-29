@@ -7,7 +7,7 @@
 
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![forbid(
+#![deny(
     clippy::pedantic,
     rust_2018_idioms,
     anonymous_parameters,

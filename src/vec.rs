@@ -88,7 +88,7 @@ impl<T> Drop for AliasableVec<T> {
         // As the `Vec` structure is being dropped we can safely assume any
         // aliasing has ended and convert the aliasable `Vec` back to into an
         // unaliasable `UniqueVec` to handle the deallocation.
-        let _ = unsafe { self.reclaim_as_unique_vec() };
+        let _vec = unsafe { self.reclaim_as_unique_vec() };
     }
 }
 
