@@ -1,9 +1,10 @@
 //! Aliasable `Box`.
 
+use core::fmt;
+use core::mem::ManuallyDrop;
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::ptr::NonNull;
-use core::{fmt, mem};
 
 pub use alloc::boxed::Box as UniqueBox;
 
@@ -13,23 +14,23 @@ pub struct AliasableBox<T: ?Sized>(NonNull<T>);
 
 impl<T: ?Sized> AliasableBox<T> {
     /// Construct an `AliasableBox` from a [`UniqueBox`].
-    pub fn from_unique(ptr: UniqueBox<T>) -> Self {
-        let ptr = unsafe { NonNull::new_unchecked(UniqueBox::into_raw(ptr)) };
-        Self(ptr)
+    pub fn from_unique(unique: UniqueBox<T>) -> Self {
+        // Leak the refence to the allocation from the unique box.
+        let leaked_ref = UniqueBox::leak(unique);
+        // Return the aliasable box.
+        Self(NonNull::from(leaked_ref))
     }
 
     /// Consumes `self` and converts it into a non-aliasable [`UniqueBox`].
     #[inline]
-    pub fn into_unique(mut ptr: AliasableBox<T>) -> UniqueBox<T> {
-        // As we are consuming the `Box` structure we can safely assume any
-        // aliasing has ended and convert the aliasable `Box` back to into an
-        // unaliasable `UniqueBox`.
-        let unique = unsafe { ptr.reclaim_as_unique_box() };
-        // Forget the aliasable `Box` so the allocation behind the `UniqueBox`
-        // is not deallocated.
-        mem::forget(ptr);
-        // Return the `UniqueBox`.
-        unique
+    pub fn into_unique(aliasable: AliasableBox<T>) -> UniqueBox<T> {
+        // Ensure we don't drop `self` as we are transferring the allocation and
+        // we don't want a use after free.
+        let mut aliasable = ManuallyDrop::new(aliasable);
+        // SAFETY: As we are consuming the aliasable box we can safely assume
+        // any aliasing has ended and convert the aliasable box back to into an
+        // unique box.
+        unsafe { aliasable.reclaim_as_unique_box() }
     }
 
     /// Convert a pinned [`AliasableBox`] to a `core::ptr::Unique` backed pinned
@@ -59,16 +60,16 @@ impl<T: ?Sized> AliasableBox<T> {
 }
 
 impl<T: ?Sized> From<UniqueBox<T>> for AliasableBox<T> {
-    fn from(ptr: UniqueBox<T>) -> Self {
-        Self::from_unique(ptr)
+    fn from(unique: UniqueBox<T>) -> Self {
+        Self::from_unique(unique)
     }
 }
 
 impl<T: ?Sized> Drop for AliasableBox<T> {
     fn drop(&mut self) {
         // SAFETY: As `self` is being dropped we can safely assume any aliasing
-        // has ended and convert the `AliasableBox` back to into an unaliasable
-        // `UniqueBox` to handle the deallocation.
+        // has ended and convert the aliasable box back to into an unique box to
+        // handle the deallocation.
         let _box = unsafe { self.reclaim_as_unique_box() };
     }
 }
@@ -132,8 +133,13 @@ unsafe impl<T, U: ?Sized> unsize::CoerciblePtr<U> for AliasableBox<T> {
     }
 
     unsafe fn replace_ptr(self, new: *mut U) -> AliasableBox<U> {
-        let this = mem::ManuallyDrop::new(self);
-        AliasableBox(this.0.replace_ptr(new))
+        // Ensure we don't drop `self` as we are transferring the allocation and
+        // we don't want a use after free.
+        let this = ManuallyDrop::new(self);
+        // Replace the inner pointer type.
+        let ptr = this.0.replace_ptr(new);
+        // Return the aliasable box with the new pointer.
+        AliasableBox(ptr)
     }
 }
 
@@ -177,7 +183,7 @@ mod tests {
     #[cfg(feature = "unsize")]
     #[test]
     fn test_unsize() {
-        use unsize::{Coercion, CoerceUnsize};
+        use unsize::{CoerceUnsize, Coercion};
         let aliasable = AliasableBox::from_unique(UniqueBox::new([0u8; 2]));
         let unsized_box: AliasableBox<[u8]> = aliasable.unsize(Coercion::to_slice());
         assert_eq!(*unsized_box, [0, 0]);

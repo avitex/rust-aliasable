@@ -33,8 +33,11 @@ impl<'a, T: ?Sized> AliasableMut<'a, T> {
 
     /// Consumes `self` and converts it into a non-aliasable `&mut`.
     #[inline]
-    pub fn into_unique(ptr: Self) -> &'a mut T {
-        unsafe { &mut *ptr.inner.as_ptr() }
+    pub fn into_unique(mut aliasable: Self) -> &'a mut T {
+        // SAFETY: We have an exclusive mutable borrow for the lifetime 'a
+        // guaranteed by this wrapper and as such we can transfer it with a
+        // reborrow.
+        unsafe { aliasable.inner.as_mut() }
     }
 
     /// Convert a pinned `AliasableMut` to a pinned `&mut`.

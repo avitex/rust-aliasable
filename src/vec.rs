@@ -1,9 +1,10 @@
 //! Aliasable `Vec`.
 
+use core::mem::ManuallyDrop;
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::ptr::NonNull;
-use core::{fmt, mem, slice};
+use core::{fmt, slice};
 
 pub use alloc::vec::Vec as UniqueVec;
 
@@ -17,31 +18,34 @@ pub struct AliasableVec<T> {
 
 impl<T> AliasableVec<T> {
     /// Construct an `AliasableVec` from a [`UniqueVec`].
-    pub fn from_unique(mut vec: UniqueVec<T>) -> Self {
-        let ptr = vec.as_mut_ptr();
-        let len = vec.len();
-        let cap = vec.capacity();
+    pub fn from_unique(unique: UniqueVec<T>) -> Self {
+        // Ensure we don't drop `self` as we are transferring the allocation and
+        // we don't want a use after free.
+        let mut unique = ManuallyDrop::new(unique);
 
-        mem::forget(vec);
+        // Get the raw parts of the vector.
+        let ptr = unique.as_mut_ptr();
+        let len = unique.len();
+        let cap = unique.capacity();
 
+        // SAFETY: The pointer returned by a vec is never null.
         let ptr = unsafe { NonNull::new_unchecked(ptr) };
 
+        // Return the aliasable vec.
         Self { ptr, len, cap }
     }
 
     /// Consumes the [`AliasableVec`] and converts it back into a
     /// non-aliasable [`UniqueVec`].
     #[inline]
-    pub fn into_unique(mut vec: AliasableVec<T>) -> UniqueVec<T> {
-        // SAFETY: As we are consuming the `Vec` structure we can safely assume
-        // any aliasing has ended and convert the aliasable `Vec` back to into
-        // an unaliasable `UniqueVec`.
-        let unique = unsafe { vec.reclaim_as_unique_vec() };
-        // Forget the aliasable `Vec` so the allocation behind the `UniqueVec`
-        // is not deallocated.
-        mem::forget(vec);
-        // Return the `UniqueVec`.
-        unique
+    pub fn into_unique(aliasable: AliasableVec<T>) -> UniqueVec<T> {
+        // Ensure we don't drop `self` as we are transferring the allocation and
+        // we don't want a use after free.
+        let mut aliasable = ManuallyDrop::new(aliasable);
+        // SAFETY: As we are consuming the aliasable vec we can safely assume
+        // any aliasing has ended and convert the aliasable vec back to into an
+        // unique vec.
+        unsafe { aliasable.reclaim_as_unique_vec() }
     }
 
     /// Convert a pinned [`AliasableVec`] to a `core::ptr::Unique` backed pinned
@@ -71,23 +75,23 @@ impl<T> AliasableVec<T> {
 
 impl<T> From<UniqueVec<T>> for AliasableVec<T> {
     #[inline]
-    fn from(vec: UniqueVec<T>) -> Self {
-        Self::from_unique(vec)
+    fn from(unique: UniqueVec<T>) -> Self {
+        Self::from_unique(unique)
     }
 }
 
 impl<T> From<AliasableVec<T>> for UniqueVec<T> {
     #[inline]
-    fn from(vec: AliasableVec<T>) -> Self {
-        AliasableVec::into_unique(vec)
+    fn from(aliasable: AliasableVec<T>) -> Self {
+        AliasableVec::into_unique(aliasable)
     }
 }
 
 impl<T> Drop for AliasableVec<T> {
     fn drop(&mut self) {
-        // As the `Vec` structure is being dropped we can safely assume any
-        // aliasing has ended and convert the aliasable `Vec` back to into an
-        // unaliasable `UniqueVec` to handle the deallocation.
+        // SAFETY: As `self` is being dropped we can safely assume any aliasing
+        // has ended and convert the aliasable vec back to into an unique vec to
+        // handle the deallocation.
         let _vec = unsafe { self.reclaim_as_unique_vec() };
     }
 }

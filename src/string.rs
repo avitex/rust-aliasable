@@ -27,6 +27,7 @@ impl AliasableString {
     #[inline]
     pub fn into_unique(s: AliasableString) -> UniqueString {
         let unique_bytes = s.into_bytes().into();
+        // SAFETY: `AliasableString` will only ever contain UTF-8.
         unsafe { UniqueString::from_utf8_unchecked(unique_bytes) }
     }
 
