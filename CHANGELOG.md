@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- [`unsize::CoerciblePtr`](https://docs.rs/unsize/1.1.0/unsize/trait.CoerciblePtr.html)
+  support for `AliasableBox` (thanks
+  [@HeroicKatora](https://github.com/HeroicKatora)).
+
 ## [0.1.3] - 2020-01-10
 
 ### Added
