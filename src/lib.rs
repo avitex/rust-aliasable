@@ -54,7 +54,7 @@ pub mod prelude {
     pub use crate::mut_ref::*;
 }
 
-#[cfg(feature = "traits")]
+#[cfg(feature = "aliasable_deref_trait")]
 pub use aliasable_deref_trait::AliasableDeref;
-#[cfg(feature = "traits")]
+#[cfg(feature = "stable_deref_trait")]
 pub use stable_deref_trait::StableDeref;

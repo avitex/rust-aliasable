@@ -103,10 +103,10 @@ impl fmt::Debug for AliasableString {
     }
 }
 
-#[cfg(feature = "traits")]
+#[cfg(feature = "stable_deref_trait")]
 unsafe impl crate::StableDeref for AliasableString {}
 
-#[cfg(feature = "traits")]
+#[cfg(feature = "aliasable_deref_trait")]
 unsafe impl crate::AliasableDeref for AliasableString {}
 
 #[cfg(test)]

@@ -112,10 +112,10 @@ where
 unsafe impl<T: ?Sized> Send for AliasableMut<'_, T> where T: Send {}
 unsafe impl<T: ?Sized> Sync for AliasableMut<'_, T> where T: Sync {}
 
-#[cfg(feature = "traits")]
+#[cfg(feature = "stable_deref_trait")]
 unsafe impl<T: ?Sized> crate::StableDeref for AliasableMut<'_, T> {}
 
-#[cfg(feature = "traits")]
+#[cfg(feature = "aliasable_deref_trait")]
 unsafe impl<T: ?Sized> crate::AliasableDeref for AliasableMut<'_, T> {}
 
 #[cfg(test)]

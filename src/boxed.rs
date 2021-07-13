@@ -117,10 +117,10 @@ where
 unsafe impl<T: ?Sized> Send for AliasableBox<T> where T: Send {}
 unsafe impl<T: ?Sized> Sync for AliasableBox<T> where T: Sync {}
 
-#[cfg(feature = "traits")]
+#[cfg(feature = "stable_deref_trait")]
 unsafe impl<T: ?Sized> crate::StableDeref for AliasableBox<T> {}
 
-#[cfg(feature = "traits")]
+#[cfg(feature = "aliasable_deref_trait")]
 unsafe impl<T: ?Sized> crate::AliasableDeref for AliasableBox<T> {}
 
 #[cfg(feature = "unsize")]
