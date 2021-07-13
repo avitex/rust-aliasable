@@ -2,17 +2,27 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semantic
+Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- `AliasableMut` is now `repr(transparent)` (thanks [@talchas]).
+
+### Fixed
+- `AliasableMut` variance issue #3 (thanks [@talchas]).
+
 ### Added
 - [`unsize::CoerciblePtr`](https://docs.rs/unsize/1.1.0/unsize/trait.CoerciblePtr.html)
-  support for `AliasableBox` (thanks
-  [@HeroicKatora](https://github.com/HeroicKatora)).
+  support for `AliasableBox` (thanks [@HeroicKatora]).
 
 ## [0.1.3] - 2020-01-10
 
 ### Added
 - `prelude` module.
-- `AliasableMut` (thanks [@Koxiaet](https://github.com/Koxiaet)).
+- `AliasableMut` (thanks [@Koxiaet]).
+
+[@Koxiaet]: https://github.com/Koxiaet  
+[@HeroicKatora]: https://github.com/HeroicKatora  
+[@talchas]: https://github.com/talchas
