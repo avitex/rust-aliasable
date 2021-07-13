@@ -16,6 +16,7 @@ use core::ptr::NonNull;
 /// - You may hold any number of `AliasableMut`s and any number of shared references to a location
 /// at once.
 /// - You may hold any number of `AliasableMut`s and one mutable reference to a location at once.
+#[repr(transparent)]
 pub struct AliasableMut<'a, T: ?Sized> {
     inner: NonNull<T>,
     // We use `T` here to ensure `T` is invariant.
