@@ -18,7 +18,8 @@ use core::ptr::NonNull;
 /// - You may hold any number of `AliasableMut`s and one mutable reference to a location at once.
 pub struct AliasableMut<'a, T: ?Sized> {
     inner: NonNull<T>,
-    _lifetime: PhantomData<&'a ()>,
+    // We use `T` here to ensure `T` is invariant.
+    _lifetime: PhantomData<&'a mut T>,
 }
 
 impl<'a, T: ?Sized> AliasableMut<'a, T> {
