@@ -1,6 +1,8 @@
 //! Aliasable `Box`.
 
+use core::cmp::Ordering;
 use core::fmt;
+use core::hash::{Hash, Hasher};
 use core::mem::ManuallyDrop;
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
@@ -116,6 +118,69 @@ where
 
 unsafe impl<T: ?Sized> Send for AliasableBox<T> where T: Send {}
 unsafe impl<T: ?Sized> Sync for AliasableBox<T> where T: Sync {}
+
+impl<T: Default> Default for AliasableBox<T> {
+    #[inline]
+    fn default() -> Self {
+        Self::from_unique(UniqueBox::default())
+    }
+}
+
+impl<T: Clone> Clone for AliasableBox<T> {
+    #[inline]
+    fn clone(&self) -> Self {
+        Self::from_unique(UniqueBox::new((**self).clone()))
+    }
+    #[inline]
+    fn clone_from(&mut self, source: &Self) {
+        (**self).clone_from(&**source);
+    }
+}
+
+impl<T: PartialEq + ?Sized> PartialEq for AliasableBox<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        **self == **other
+    }
+}
+
+impl<T: Eq + ?Sized> Eq for AliasableBox<T> {}
+
+impl<T: PartialOrd + ?Sized> PartialOrd for AliasableBox<T> {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        (**self).partial_cmp(&**other)
+    }
+    #[inline]
+    fn lt(&self, other: &Self) -> bool {
+        **self < **other
+    }
+    #[inline]
+    fn le(&self, other: &Self) -> bool {
+        **self <= **other
+    }
+    #[inline]
+    fn gt(&self, other: &Self) -> bool {
+        **self > **other
+    }
+    #[inline]
+    fn ge(&self, other: &Self) -> bool {
+        **self >= **other
+    }
+}
+
+impl<T: Ord + ?Sized> Ord for AliasableBox<T> {
+    #[inline]
+    fn cmp(&self, other: &Self) -> Ordering {
+        (**self).cmp(&**other)
+    }
+}
+
+impl<T: Hash + ?Sized> Hash for AliasableBox<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        (**self).hash(state);
+    }
+}
 
 #[cfg(feature = "stable_deref_trait")]
 unsafe impl<T: ?Sized> crate::StableDeref for AliasableBox<T> {}

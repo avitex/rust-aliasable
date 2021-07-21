@@ -1,5 +1,6 @@
 //! Aliasable `String`.
 
+use core::hash::{Hash, Hasher};
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::{fmt, str};
@@ -10,6 +11,7 @@ pub use alloc::string::String as UniqueString;
 
 /// Basic aliasable (non `core::ptr::Unique`) alternative to
 /// [`alloc::string::String`].
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub struct AliasableString(AliasableVec<u8>);
 
 impl AliasableString {
@@ -100,6 +102,33 @@ impl AsMut<str> for AliasableString {
 impl fmt::Debug for AliasableString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(self.as_ref(), f)
+    }
+}
+
+impl Default for AliasableString {
+    #[inline]
+    fn default() -> Self {
+        Self::from_unique(UniqueString::default())
+    }
+}
+
+impl Clone for AliasableString {
+    #[inline]
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+    #[inline]
+    fn clone_from(&mut self, source: &Self) {
+        self.0.clone_from(&source.0);
+    }
+}
+
+// Deriving `Hash` would be incorrect because it would hash as bytes and not a string.
+#[allow(clippy::derive_hash_xor_eq)]
+impl Hash for AliasableString {
+    #[inline]
+    fn hash<H: Hasher>(&self, hasher: &mut H) {
+        (**self).hash(hasher);
     }
 }
 
