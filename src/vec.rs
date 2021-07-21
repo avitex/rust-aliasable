@@ -1,5 +1,8 @@
 //! Aliasable `Vec`.
 
+use core::cmp::Ordering;
+use core::hash::{Hash, Hasher};
+use core::mem;
 use core::mem::ManuallyDrop;
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
@@ -137,6 +140,69 @@ where
 
 unsafe impl<T> Send for AliasableVec<T> where T: Send {}
 unsafe impl<T> Sync for AliasableVec<T> where T: Sync {}
+
+impl<T> Default for AliasableVec<T> {
+    #[inline]
+    fn default() -> Self {
+        Self::from_unique(UniqueVec::new())
+    }
+}
+
+impl<T: Clone> Clone for AliasableVec<T> {
+    #[inline]
+    fn clone(&self) -> Self {
+        Self::from_unique((**self).to_vec())
+    }
+    #[inline]
+    fn clone_from(&mut self, source: &Self) {
+        struct Guard<'a, T>(&'a mut AliasableVec<T>, UniqueVec<T>);
+        impl<T> Drop for Guard<'_, T> {
+            fn drop(&mut self) {
+                *self.0 = AliasableVec::from_unique(mem::take(&mut self.1));
+            }
+        }
+
+        let taken = Self::into_unique(mem::take(self));
+        let mut guard = Guard(self, taken);
+
+        guard.1.truncate(source.len);
+
+        let (init, tail) = source.split_at(guard.1.len());
+
+        guard.1.clone_from_slice(init);
+        guard.1.extend_from_slice(tail);
+    }
+}
+
+impl<T: PartialEq<U>, U> PartialEq<AliasableVec<U>> for AliasableVec<T> {
+    #[inline]
+    fn eq(&self, other: &AliasableVec<U>) -> bool {
+        **self == **other
+    }
+}
+
+impl<T: Eq> Eq for AliasableVec<T> {}
+
+impl<T: PartialOrd> PartialOrd for AliasableVec<T> {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        (**self).partial_cmp(&**other)
+    }
+}
+
+impl<T: Ord> Ord for AliasableVec<T> {
+    #[inline]
+    fn cmp(&self, other: &Self) -> Ordering {
+        (**self).cmp(&**other)
+    }
+}
+
+impl<T: Hash> Hash for AliasableVec<T> {
+    #[inline]
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        (**self).hash(state);
+    }
+}
 
 #[cfg(feature = "stable_deref_trait")]
 unsafe impl<T> crate::StableDeref for AliasableVec<T> {}
