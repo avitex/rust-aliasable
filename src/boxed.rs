@@ -211,6 +211,7 @@ unsafe impl<T, U: ?Sized> unsize::CoerciblePtr<U> for AliasableBox<T> {
 #[cfg(test)]
 mod tests {
     use super::{AliasableBox, UniqueBox};
+    use crate::test_utils::{check_ordering, hash_of};
     use alloc::format;
 
     #[test]
@@ -243,6 +244,34 @@ mod tests {
     fn test_debug() {
         let aliasable = AliasableBox::from_unique(UniqueBox::new(10));
         assert_eq!(format!("{:?}", aliasable), "10");
+    }
+
+    #[test]
+    fn test_default() {
+        assert_eq!(*<AliasableBox<i32>>::default(), 0);
+    }
+
+    #[test]
+    #[allow(clippy::redundant_clone)]
+    fn test_clone() {
+        let mut boxed = AliasableBox::from_unique(UniqueBox::new(10));
+        assert_eq!(*boxed.clone(), 10);
+        boxed.clone_from(&AliasableBox::from_unique(UniqueBox::new(20)));
+        assert_eq!(*boxed, 20);
+    }
+
+    #[test]
+    fn test_cmp() {
+        check_ordering(
+            AliasableBox::from_unique(UniqueBox::new(5)),
+            AliasableBox::from_unique(UniqueBox::new(7)),
+        );
+    }
+
+    #[test]
+    fn test_hash() {
+        let b = UniqueBox::new(5);
+        assert_eq!(hash_of(AliasableBox::from_unique(b.clone())), hash_of(b));
     }
 
     #[cfg(feature = "unsize")]

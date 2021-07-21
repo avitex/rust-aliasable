@@ -141,6 +141,7 @@ unsafe impl crate::AliasableDeref for AliasableString {}
 #[cfg(test)]
 mod tests {
     use super::{AliasableString, AliasableVec, UniqueString};
+    use crate::test_utils::{check_ordering, hash_of};
     use alloc::{format, vec};
     use core::pin::Pin;
 
@@ -182,6 +183,39 @@ mod tests {
         assert_eq!(
             AliasableVec::into_unique(aliasable.into_bytes()),
             vec![b'h', b'e', b'l', b'l', b'o']
+        );
+    }
+
+    #[test]
+    fn test_default() {
+        assert_eq!(
+            AliasableString::default(),
+            AliasableString::from_unique(UniqueString::new())
+        );
+    }
+
+    #[test]
+    #[allow(clippy::redundant_clone)]
+    fn test_clone() {
+        let mut s = AliasableString::from_unique("hello".into());
+        assert_eq!(&*s.clone(), "hello");
+        s.clone_from(&AliasableString::from_unique("world".into()));
+        assert_eq!(&*s, "world");
+    }
+
+    #[test]
+    fn test_cmp() {
+        check_ordering(
+            AliasableString::from_unique("abcdef".into()),
+            AliasableString::from_unique("abdef".into()),
+        );
+    }
+
+    #[test]
+    fn test_hash() {
+        assert_eq!(
+            hash_of(AliasableString::from_unique("some data".into())),
+            hash_of("some data")
         );
     }
 }

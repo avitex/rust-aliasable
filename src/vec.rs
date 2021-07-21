@@ -212,7 +212,9 @@ unsafe impl<T> crate::AliasableDeref for AliasableVec<T> {}
 
 #[cfg(test)]
 mod tests {
-    use super::AliasableVec;
+    use super::{AliasableVec, UniqueVec};
+    use crate::test_utils::{check_ordering, hash_of};
+    use alloc::string::String;
     use alloc::{format, vec};
     use core::pin::Pin;
 
@@ -246,5 +248,49 @@ mod tests {
     fn test_debug() {
         let aliasable = AliasableVec::from_unique(vec![10]);
         assert_eq!(format!("{:?}", aliasable), "[10]");
+    }
+
+    #[test]
+    fn test_default() {
+        assert_eq!(
+            <AliasableVec<&i32>>::default(),
+            <AliasableVec<&i32>>::from_unique(UniqueVec::new())
+        );
+    }
+
+    #[test]
+    #[allow(clippy::redundant_clone)]
+    fn test_clone() {
+        let mut v = AliasableVec::from_unique(vec![1, 2, 3]);
+        assert_eq!(&*v.clone(), [1, 2, 3]);
+
+        v.clone_from(&AliasableVec::from_unique(vec![4, 5, 6, 7, 8]));
+        assert_eq!(&*v, [4, 5, 6, 7, 8]);
+
+        v.clone_from(&AliasableVec::from_unique(vec![9]));
+        assert_eq!(&*v, [9]);
+
+        v.clone_from(&AliasableVec::default());
+        assert_eq!(&*v, []);
+    }
+
+    #[test]
+    fn test_cmp() {
+        check_ordering(
+            AliasableVec::from_unique(vec![1, 2, 3]),
+            AliasableVec::from_unique(vec![1, 2, 4]),
+        );
+
+        let l = <AliasableVec<&str>>::from_unique(vec!["x", "y"]);
+        let r = <AliasableVec<String>>::from_unique(vec!["x".into(), "y".into()]);
+        assert_eq!(l, r);
+    }
+
+    #[test]
+    fn test_hash() {
+        assert_eq!(
+            hash_of(AliasableVec::from_unique(vec![1, 2, 3])),
+            hash_of([1, 2, 3])
+        );
     }
 }

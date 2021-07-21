@@ -169,6 +169,7 @@ unsafe impl<T: ?Sized> crate::AliasableDeref for AliasableMut<'_, T> {}
 #[cfg(test)]
 mod tests {
     use super::AliasableMut;
+    use crate::test_utils::{check_ordering, hash_of};
     use alloc::boxed::Box;
     use alloc::format;
     use core::pin::Pin;
@@ -208,5 +209,18 @@ mod tests {
         let mut data = 10;
         let aliasable = AliasableMut::from_unique(&mut data);
         assert_eq!(format!("{:?}", aliasable), "10");
+    }
+
+    #[test]
+    fn test_cmp() {
+        check_ordering(
+            AliasableMut::from_unique(&mut 5),
+            AliasableMut::from_unique(&mut 7),
+        );
+    }
+
+    #[test]
+    fn test_hash() {
+        assert_eq!(hash_of(AliasableMut::from_unique(&mut 389)), hash_of(389));
     }
 }
