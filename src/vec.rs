@@ -69,7 +69,7 @@ impl<T> AliasableVec<T> {
 
     #[inline]
     unsafe fn reclaim_as_unique_vec(&mut self) -> UniqueVec<T> {
-        UniqueVec::from_raw_parts(self.ptr.as_mut(), self.len, self.cap)
+        UniqueVec::from_raw_parts(self.ptr.as_ptr(), self.len, self.cap)
     }
 }
 
@@ -152,10 +152,10 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let aliasable = AliasableVec::from_unique(vec![10]);
-        assert_eq!(&*aliasable, &[10]);
+        let aliasable = AliasableVec::from_unique(vec![10, 11]);
+        assert_eq!(&*aliasable, &[10, 11]);
         let unique = AliasableVec::into_unique(aliasable);
-        assert_eq!(&*unique, &[10]);
+        assert_eq!(&*unique, &[10, 11]);
     }
 
     #[test]
