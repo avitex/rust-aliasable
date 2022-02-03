@@ -2,12 +2,11 @@
 
 use core::cmp::Ordering;
 use core::hash::{Hash, Hasher};
-use core::mem;
 use core::mem::ManuallyDrop;
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::ptr::NonNull;
-use core::{fmt, slice};
+use core::{fmt, mem, slice};
 
 pub use alloc::vec::Vec as UniqueVec;
 
@@ -20,6 +19,27 @@ pub struct AliasableVec<T> {
 }
 
 impl<T> AliasableVec<T> {
+    /// Returns the number of elements in the vector, also referred to as its
+    /// ‘length’.
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Returns the number of elements the vector can hold without reallocating.
+    pub fn capacity(&self) -> usize {
+        self.cap
+    }
+
+    /// Returns a raw pointer to the vector’s buffer.
+    pub fn as_ptr(&self) -> *const T {
+        self.ptr.as_ptr()
+    }
+
+    /// Returns an unsafe mutable pointer to the vector’s buffer.
+    pub fn as_mut_ptr(&mut self) -> *mut T {
+        self.ptr.as_ptr()
+    }
+
     /// Construct an `AliasableVec` from a [`UniqueVec`].
     pub fn from_unique(unique: UniqueVec<T>) -> Self {
         // Ensure we don't drop `self` as we are transferring the allocation and
