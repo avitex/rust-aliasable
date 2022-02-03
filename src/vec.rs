@@ -40,6 +40,11 @@ impl<T> AliasableVec<T> {
         self.ptr.as_ptr()
     }
 
+    /// Returns `true` if the vector contains no elements.
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     /// Construct an `AliasableVec` from a [`UniqueVec`].
     pub fn from_unique(unique: UniqueVec<T>) -> Self {
         // Ensure we don't drop `self` as we are transferring the allocation and

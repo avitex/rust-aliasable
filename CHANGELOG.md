@@ -16,7 +16,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `AliasableVec` provenance issue #6 (thanks [@saethlin]).
 
 ### Added
-- Expose `AliasableVec` parts with `len/capacity/as_ptr/as_ptr_mut`.
+- Expose `AliasableVec` parts with `len/capacity/as_ptr/as_ptr_mut/is_empty`.
 - [`unsize::CoerciblePtr`](https://docs.rs/unsize/1.1.0/unsize/trait.CoerciblePtr.html)
   support for `AliasableBox` (thanks [@HeroicKatora]).
 
