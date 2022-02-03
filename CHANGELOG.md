@@ -9,9 +9,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 - `AliasableMut` is now `repr(transparent)` (thanks [@talchas]).
+- Implement derivable traits (thanks [@Kestrer])
 
 ### Fixed
 - `AliasableMut` variance issue #3 (thanks [@talchas]).
+- `AliasableVec` provenance issue #6 (thanks [@saethlin])
 
 ### Added
 - [`unsize::CoerciblePtr`](https://docs.rs/unsize/1.1.0/unsize/trait.CoerciblePtr.html)
@@ -26,3 +28,5 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 [@Koxiaet]: https://github.com/Koxiaet  
 [@HeroicKatora]: https://github.com/HeroicKatora  
 [@talchas]: https://github.com/talchas
+[@Kestrer]: https://github.com/Kestrer
+[@saethlin]: https://github.com/saethlin
